@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  email     String    @unique
+  password  String
+  profile   Profile?
+  snippets  Snippet[]
+  votes     Vote[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Profile {
+  id          Int     @id @default(autoincrement())
+  userId      Int     @unique
+  bio         String?
+  avatar      String? // Profile picture URL
+  user        User    @relation(fields: [userId], references: [id])
+}
+
+model Snippet {
+  id          Int       @id @default(autoincrement())
+  title       String
+  code        String
+  language    String
+  description String?
+  tags        Tag[]
+  authorId    Int
+  author      User      @relation(fields: [authorId], references: [id])
+  votes       Vote[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  snippets  Snippet[]
+}
+
+model Vote {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  snippetId Int
+  voteType  VoteType
+  user      User     @relation(fields: [userId], references: [id])
+  snippet   Snippet  @relation(fields: [snippetId], references: [id])
+
+  @@unique([userId, snippetId]) // Prevent multiple votes by the same user
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
